@@ -1,0 +1,48 @@
+/* Trzy tryby wygladu, wspolne dla paska i strony startowej.
+   Kafelki i Matrix wzoruja sie na programie BIG_DATA (metro-unified.css, matrix.css). */
+
+:root, body.motyw-klasyczny {
+  --tlo:      #1b1e22;
+  --panel:    #23262b;
+  --panel2:   #2b2f36;
+  --linia:    #3a3f47;
+  --tekst:    #d8dbe0;
+  --przygas:  #8a9199;
+  --akcent:   #7fc7ff;
+  --akcent2:  #b6e3a8;
+  --akcent3:  #e6c97a;
+  --zaokr:    4px;
+  --kafel-zaokr: 6px;
+  --pismo: "Segoe UI", sans-serif;
+}
+
+/* Kafelki - fiolet i kwadraty jak w BIG_DATA */
+body.motyw-kafelki {
+  --tlo:      #240052;
+  --panel:    #2d0a5e;
+  --panel2:   #35165b;
+  --linia:    #4a2680;
+  --tekst:    #ffffff;
+  --przygas:  #c7b3e8;
+  --akcent:   #ffffff;
+  --akcent2:  #d9f36a;
+  --akcent3:  #ffd166;
+  --zaokr:    0px;
+  --kafel-zaokr: 0px;
+}
+
+/* Matrix - czern i zielen terminala */
+body.motyw-matrix {
+  --tlo:      #000000;
+  --panel:    #021008;
+  --panel2:   #031208;
+  --linia:    #195e32;
+  --tekst:    #84ffab;
+  --przygas:  #6dbc88;
+  --akcent:   #5fff91;
+  --akcent2:  #63ff93;
+  --akcent3:  #a1ffbb;
+  --zaokr:    0px;
+  --kafel-zaokr: 0px;
+  --pismo: Consolas, "Cascadia Mono", monospace;
+}

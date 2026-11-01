@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data:">
+<title>Logowanie</title>
+<link rel="stylesheet" href="motywy.css">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: var(--tlo); color: var(--tekst); font: 14px var(--pismo);
+  }
+  .karta {
+    width: 340px; padding: 28px; border: 1px solid var(--linia); border-radius: 10px;
+    background: var(--panel2);
+  }
+  h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; letter-spacing: .5px; }
+  .podtytul { margin: 0 0 22px; color: var(--przygas); font-size: 12px; }
+  label { display: block; margin-bottom: 4px; font-size: 12px; color: var(--przygas); }
+  input {
+    width: 100%; margin-bottom: 16px; padding: 9px 10px;
+    border: 1px solid var(--linia); border-radius: 6px;
+    background: var(--tlo); color: var(--tekst); font: 14px var(--pismo);
+  }
+  input:focus { outline: none; border-color: var(--akcent); }
+  button {
+    width: 100%; padding: 10px; border: 0; border-radius: 6px;
+    background: var(--akcent); color: #08130c; font: 600 14px var(--pismo); cursor: pointer;
+  }
+  button:disabled { opacity: .5; cursor: default; }
+  #komunikat { margin-top: 16px; font-size: 12px; min-height: 32px; line-height: 1.5; }
+  #komunikat.blad { color: #f08a8a; }
+  #komunikat.blokada { color: #f0b968; }
+</style>
+</head>
+<body>
+  <form class="karta" id="formularz">
+    <h1 id="naglowek">Nebu</h1>
+    <p class="podtytul">Zaloguj sie swoim kontem roboczym.</p>
+
+    <label for="uzytkownik">Uzytkownik</label>
+    <input id="uzytkownik" autocomplete="off" autofocus>
+
+    <label for="haslo">Haslo</label>
+    <input id="haslo" type="password" autocomplete="off">
+
+    <button id="wejdz" type="submit">Wejdz</button>
+    <div id="komunikat"></div>
+  </form>
+
+<script>
+  const formularz = document.getElementById('formularz');
+  const uzytkownik = document.getElementById('uzytkownik');
+  const haslo = document.getElementById('haslo');
+  const wejdz = document.getElementById('wejdz');
+  const komunikat = document.getElementById('komunikat');
+
+  formularz.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!uzytkownik.value.trim() || !haslo.value) {
+      komunikat.className = 'blad';
+      komunikat.textContent = 'Podaj uzytkownika i haslo.';
+      return;
+    }
+    wejdz.disabled = true;
+    komunikat.className = '';
+    komunikat.textContent = 'Sprawdzam...';
+    geo.zaloguj(uzytkownik.value.trim(), haslo.value);
+  });
+
+  geo.naLogowanie((wynik) => {
+    wejdz.disabled = false;
+    haslo.value = '';
+    haslo.focus();
+
+    if (wynik.ok) {
+      komunikat.className = '';
+      komunikat.textContent = 'Wchodze...';
+      wejdz.disabled = true;
+      return;
+    }
+
+    // Konto zablokowane zdejmuje wylacznie administrator - nie ma tu czego proboowac dalej.
+    komunikat.className = wynik.zablokowany ? 'blokada' : 'blad';
+    komunikat.textContent = wynik.komunikat
+      + (wynik.zostalo > 0 ? '  (proby do blokady: ' + wynik.zostalo + ')' : '');
+    if (wynik.zablokowany) wejdz.disabled = true;
+  });
+
+  geo.naNazweEdycji((nazwa) => {
+    document.getElementById('naglowek').textContent = nazwa || 'Nebu';
+    document.title = 'Logowanie - ' + (nazwa || 'Nebu');
+  });
+</script>
+</body>
+</html>

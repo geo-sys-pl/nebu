@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data:">
+<title>Nebu - integracje</title>
+<link rel="stylesheet" href="motywy.css">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px; background: var(--tlo); color: var(--tekst);
+    font: 14px var(--pismo); min-height: 100vh;
+  }
+  h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+  h2 { margin: 26px 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--przygas); }
+  p.wstep { margin: 0 0 4px; color: var(--przygas); font-size: 13px; line-height: 1.5; }
+
+  input[type=text], input[type=password], input[type=number], textarea, select {
+    width: 100%; padding: 7px 8px; border: 1px solid var(--linia);
+    border-radius: var(--zaokr); background: var(--panel); color: var(--tekst);
+    font: 13px var(--pismo);
+  }
+  textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--akcent); }
+
+  button {
+    height: 30px; padding: 0 12px; border: 1px solid var(--linia); border-radius: var(--zaokr);
+    background: var(--panel2); color: var(--tekst); cursor: pointer; font: 13px var(--pismo);
+  }
+  button:hover:not(:disabled) { filter: brightness(1.3); }
+  button:disabled { opacity: .5; cursor: default; }
+  button.glowny { border-color: var(--akcent); color: var(--akcent); font-weight: 600; }
+  button.usun { color: #e08a8a; }
+  button.usun:hover { background: #7a2f2f; color: #fff; }
+
+  .rzad { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+  .rzad .rozpychacz { flex: 1; }
+  .siatka { display: grid; grid-template-columns: 150px 1fr; gap: 8px 12px; align-items: center; margin-top: 10px; }
+  .siatka label { color: var(--przygas); font-size: 12px; }
+
+  .karta {
+    border: 1px solid var(--linia); border-radius: var(--zaokr); background: var(--panel);
+    padding: 12px 14px; margin-top: 10px;
+  }
+  .karta .glowa { display: flex; gap: 10px; align-items: center; }
+  .karta .nazwa { font-weight: 600; }
+  .karta .numer { color: var(--przygas); font-size: 12px; min-width: 76px; }
+  .karta .szczegol { margin-top: 6px; color: var(--przygas); font-size: 12px; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
+
+  .podpowiedz { color: var(--przygas); font-size: 12px; line-height: 1.6; margin: 6px 0 0; }
+  .blad { color: #e08a8a; font-size: 12px; white-space: pre-wrap; margin-top: 8px; }
+  .dobrze { color: #8fc98f; font-size: 12px; white-space: pre-wrap; margin-top: 8px; }
+  .pusto { color: var(--przygas); font-size: 13px; font-style: italic; margin-top: 10px; }
+  table.okna { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+  table.okna th { text-align: left; color: var(--przygas); font-weight: 600; padding: 0 8px 4px 0; }
+  table.okna td { padding: 2px 8px 2px 0; color: var(--przygas); word-break: break-all; }
+  table.okna td.mon { color: var(--tekst); font-weight: 600; width: 70px; }
+</style>
+</head>
+<body>
+
+<h1>Integracje miedzy oknami</h1>
+<p class="wstep">
+  Opisz slowami, co ma sie dziac miedzy monitorami &mdash; na przyklad:
+  <em>&bdquo;wez wspolrzedne z aplikacji na srodkowym monitorze i otworz je w aplikacji
+  na prawym, z kamera na wysokosci 50 m&rdquo;</em>.
+  Nebu zamieni to na przepis, pokaze go po polsku i zapisze dopiero, gdy go zatwierdzisz.
+</p>
+<p class="podpowiedz">
+  Dziala z aplikacjami, ktore trzymaja swoj stan w adresie (wspolrzedne, zoom, numer dzialki,
+  wysokosc kamery). Nebu nie uruchamia zadnego kodu od modelu &mdash; sklada adres i otwiera go.
+</p>
+
+<h2>Okna otwarte teraz</h2>
+<table class="okna"><tbody id="oknaLista"></tbody></table>
+
+<h2>Klucz do modelu</h2>
+<p class="podpowiedz" id="stanKlucza">sprawdzam...</p>
+<div class="rzad">
+  <input type="password" id="klucz" placeholder="wklej swoj klucz API (zostaje zaszyfrowany w Twoim profilu)" autocomplete="off">
+  <button id="zapiszKlucz">Zapisz</button>
+  <button id="usunKlucz" class="usun">Usun</button>
+</div>
+<p class="podpowiedz">
+  Klucz jest Twoj i zostaje na tym komputerze, zaszyfrowany kluczem konta Windows.
+  W paczce programu nie ma zadnego klucza. Gdy klikniesz &bdquo;Napisz przepis&rdquo;, do modelu
+  ida: Twoje zdanie oraz numery monitorow, nazwy i <strong>adresy</strong> otwartych okien
+  &mdash; nic wiecej i tylko wtedy.
+</p>
+
+<h2>Nowa integracja</h2>
+<textarea id="zdanie" placeholder="Napisz zwyklym zdaniem, co ma sie stac..."></textarea>
+<div class="rzad">
+  <button id="napisz" class="glowny">Napisz przepis</button>
+  <button id="recznie">Wpisze sam</button>
+  <span class="rozpychacz"></span>
+  <span class="podpowiedz" id="stanPisania"></span>
+</div>
+
+<div id="formularz" style="display:none">
+  <div class="siatka">
+    <label for="fNazwa">Nazwa</label><input type="text" id="fNazwa">
+    <label for="fZrodlo">Monitor zrodla</label><input type="number" id="fZrodlo" min="1" max="9">
+    <label for="fCel">Monitor celu</label><input type="number" id="fCel" min="1" max="9">
+    <label for="fSzablon">Adres celu</label><input type="text" id="fSzablon" placeholder="http://... z miejscami {x} {y}">
+    <label for="fWzorzec">Wzorzec (opcja)</label><input type="text" id="fWzorzec" placeholder="puste = czytam parametry z adresu">
+    <label for="fKiedy">Kiedy</label>
+    <select id="fKiedy">
+      <option value="zmiana">samo, po zmianie adresu w zrodle</option>
+      <option value="skrot">tylko ze skrotu Ctrl+Shift+numer</option>
+    </select>
+  </div>
+  <div class="rzad">
+    <button id="sprawdz">Sprawdz</button>
+    <button id="dodaj" class="glowny">Dodaj do listy</button>
+    <button id="zwin">Zwin</button>
+  </div>
+  <p id="opisPrzepisu" class="dobrze"></p>
+  <p id="bladPrzepisu" class="blad"></p>
+</div>
+
+<h2>Zapisane integracje</h2>
+<div id="lista"></div>
+<p class="podpowiedz" id="wynikUruchomienia"></p>
+
+<script>
+  const g = window.geo;
+  let integracje = [];
+
+  function tekst(el, t, klasa) {
+    el.textContent = t || '';
+    if (klasa) el.className = klasa;
+  }
+
+  function przepisZFormularza() {
+    return {
+      nazwa: document.getElementById('fNazwa').value,
+      zrodloMonitor: parseInt(document.getElementById('fZrodlo').value, 10) || 0,
+      celMonitor: parseInt(document.getElementById('fCel').value, 10) || 0,
+      szablon: document.getElementById('fSzablon').value,
+      wzorzec: document.getElementById('fWzorzec').value,
+      kiedy: document.getElementById('fKiedy').value,
+      wlaczona: true,
+    };
+  }
+
+  function doFormularza(p) {
+    document.getElementById('fNazwa').value = p.nazwa || '';
+    document.getElementById('fZrodlo').value = p.zrodloMonitor || '';
+    document.getElementById('fCel').value = p.celMonitor || '';
+    document.getElementById('fSzablon').value = p.szablon || '';
+    document.getElementById('fWzorzec').value = p.wzorzec || '';
+    document.getElementById('fKiedy').value = p.kiedy || 'zmiana';
+    document.getElementById('formularz').style.display = 'block';
+  }
+
+  function rysujOkna(okna) {
+    const cel = document.getElementById('oknaLista');
+    cel.textContent = '';
+    if (!okna.length) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 2;
+      td.textContent = 'Nie ma otwartych okien.';
+      tr.appendChild(td); cel.appendChild(tr);
+      return;
+    }
+    for (const o of okna) {
+      const tr = document.createElement('tr');
+      const td1 = document.createElement('td');
+      td1.className = 'mon';
+      td1.textContent = 'monitor ' + o.monitor;
+      const td2 = document.createElement('td');
+      td2.textContent = o.strona + (o.adres ? '  -  ' + o.adres : '');
+      tr.appendChild(td1); tr.appendChild(td2); cel.appendChild(tr);
+    }
+  }
+
+  function rysujListe() {
+    const cel = document.getElementById('lista');
+    cel.textContent = '';
+    if (!integracje.length) {
+      const p = document.createElement('p');
+      p.className = 'pusto';
+      p.textContent = 'Jeszcze zadnej. Napisz pierwsza wyzej.';
+      cel.appendChild(p);
+      return;
+    }
+
+    integracje.forEach((p, i) => {
+      const karta = document.createElement('div');
+      karta.className = 'karta';
+
+      const glowa = document.createElement('div');
+      glowa.className = 'glowa';
+
+      const haczyk = document.createElement('input');
+      haczyk.type = 'checkbox';
+      haczyk.checked = p.wlaczona !== false;
+      haczyk.addEventListener('change', () => { p.wlaczona = haczyk.checked; zapisz(); });
+
+      const numer = document.createElement('span');
+      numer.className = 'numer';
+      numer.textContent = 'Ctrl+Shift+' + (i + 1);
+
+      const nazwa = document.createElement('span');
+      nazwa.className = 'nazwa';
+      nazwa.textContent = p.nazwa;
+
+      const rozpych = document.createElement('span');
+      rozpych.className = 'rozpychacz';
+
+      const odpal = document.createElement('button');
+      odpal.textContent = 'Uruchom teraz';
+      odpal.addEventListener('click', () => g.uruchomIntegracje(p.nazwa));
+
+      const edytuj = document.createElement('button');
+      edytuj.textContent = 'Edytuj';
+      edytuj.addEventListener('click', () => {
+        doFormularza(p);
+        integracje.splice(i, 1);
+        rysujListe();
+      });
+
+      const usun = document.createElement('button');
+      usun.className = 'usun';
+      usun.textContent = 'Usun';
+      usun.addEventListener('click', () => { integracje.splice(i, 1); zapisz(); });
+
+      glowa.appendChild(haczyk);
+      glowa.appendChild(numer);
+      glowa.appendChild(nazwa);
+      glowa.appendChild(rozpych);
+      glowa.appendChild(odpal);
+      glowa.appendChild(edytuj);
+      glowa.appendChild(usun);
+
+      const szczegol = document.createElement('div');
+      szczegol.className = 'szczegol';
+      szczegol.textContent = 'monitor ' + p.zrodloMonitor + ' -> monitor ' + p.celMonitor
+        + (p.kiedy === 'skrot' ? '  (tylko ze skrotu)' : '  (samo, po zmianie adresu)')
+        + '\n' + p.szablon;
+
+      karta.appendChild(glowa);
+      karta.appendChild(szczegol);
+      cel.appendChild(karta);
+    });
+  }
+
+  function zapisz() {
+    g.zapiszIntegracje(integracje);
+  }
+
+  // ---------------------------------------------------------------- zdarzenia
+
+  document.getElementById('napisz').addEventListener('click', () => {
+    const zdanie = document.getElementById('zdanie').value.trim();
+    if (!zdanie) return;
+    document.getElementById('napisz').disabled = true;
+    tekst(document.getElementById('stanPisania'), 'pytam model...', 'podpowiedz');
+    g.napiszIntegracje(zdanie);
+  });
+
+  document.getElementById('recznie').addEventListener('click', () => {
+    doFormularza({ kiedy: 'zmiana' });
+  });
+
+  document.getElementById('zwin').addEventListener('click', () => {
+    document.getElementById('formularz').style.display = 'none';
+  });
+
+  document.getElementById('sprawdz').addEventListener('click', () => {
+    g.sprawdzIntegracje(przepisZFormularza());
+  });
+
+  document.getElementById('dodaj').addEventListener('click', () => {
+    const p = przepisZFormularza();
+    integracje.push(p);
+    zapisz();
+    document.getElementById('formularz').style.display = 'none';
+    document.getElementById('zdanie').value = '';
+  });
+
+  document.getElementById('zapiszKlucz').addEventListener('click', () => {
+    const pole = document.getElementById('klucz');
+    g.zapiszKluczAi(pole.value);
+    pole.value = '';
+  });
+
+  document.getElementById('usunKlucz').addEventListener('click', () => g.usunKluczAi());
+
+  // ---------------------------------------------------------------- odpowiedzi z programu
+
+  g.naIntegracje((dane) => {
+    document.documentElement.dataset.motyw = dane.motyw || '';
+    integracje = dane.integracje || [];
+    rysujOkna(dane.okna || []);
+    pokazStanKlucza(dane.klucz || {});
+    rysujListe();
+  });
+
+  g.poZapisieIntegracji((dane) => {
+    integracje = dane.integracje || [];
+    rysujListe();
+  });
+
+  g.naPrzepisOdAi((wynik) => {
+    document.getElementById('napisz').disabled = false;
+    if (!wynik.ok) {
+      tekst(document.getElementById('stanPisania'), '', 'podpowiedz');
+      tekst(document.getElementById('bladPrzepisu'), 'Nie wyszlo: ' + wynik.powod, 'blad');
+      document.getElementById('formularz').style.display = 'block';
+      if (wynik.przepis) doFormularza(wynik.przepis);
+      return;
+    }
+    tekst(document.getElementById('stanPisania'), 'gotowe - sprawdz i dodaj', 'podpowiedz');
+    tekst(document.getElementById('bladPrzepisu'), '', 'blad');
+    doFormularza(wynik.przepis);
+    tekst(document.getElementById('opisPrzepisu'), wynik.poPolsku, 'dobrze');
+  });
+
+  g.naSprawdzeniu((wynik) => {
+    if (wynik.ok) {
+      tekst(document.getElementById('opisPrzepisu'), wynik.poPolsku, 'dobrze');
+      tekst(document.getElementById('bladPrzepisu'), '', 'blad');
+    } else {
+      tekst(document.getElementById('opisPrzepisu'), '', 'dobrze');
+      tekst(document.getElementById('bladPrzepisu'), wynik.bledy.join('\n'), 'blad');
+    }
+  });
+
+  g.naUruchomieniu((wynik) => {
+    tekst(document.getElementById('wynikUruchomienia'),
+      wynik.ok ? 'Otwarte: ' + wynik.adres : 'Nie poszlo: ' + wynik.powod,
+      wynik.ok ? 'dobrze' : 'blad');
+  });
+
+  function pokazStanKlucza(stan) {
+    const el = document.getElementById('stanKlucza');
+    if (!stan.szyfrowanie) {
+      tekst(el, 'Ten system nie udostepnia szyfrowania - klucza nie zapisze. Przepisy mozesz pisac recznie.', 'blad');
+      return;
+    }
+    tekst(el, stan.jest
+      ? 'Klucz jest zapisany (zaszyfrowany). Model: ' + stan.model + '.'
+      : 'Klucza nie ma. Bez niego dziala wszystko oprocz pisania przepisow zdaniem.', 'podpowiedz');
+  }
+
+  g.naKluczuAi((stan) => {
+    pokazStanKlucza(stan);
+    if (stan.ok === false && stan.powod) {
+      tekst(document.getElementById('stanKlucza'), 'Nie zapisalem klucza: ' + stan.powod, 'blad');
+    }
+  });
+
+  g.dajIntegracje();
+</script>
+</body>
+</html>

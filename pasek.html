@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data:">
+<title>Pasek</title>
+<link rel="stylesheet" href="motywy.css">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--panel); color: var(--tekst); font: 13px var(--pismo);
+    user-select: none; white-space: nowrap; overflow: hidden;
+  }
+  #narzedzia {
+    height: 38px; display: flex; align-items: center; gap: 5px; padding: 0 8px;
+    border-bottom: 1px solid var(--linia);
+  }
+  button {
+    height: 26px; min-width: 28px; padding: 0 8px; border: 1px solid var(--linia);
+    border-radius: var(--zaokr); background: var(--panel2); color: var(--tekst);
+    cursor: pointer; font-size: 13px; font-family: var(--pismo);
+  }
+  button:hover:not(:disabled) { filter: brightness(1.25); }
+  button:disabled { opacity: .35; cursor: default; }
+  #aplikacja { font-weight: 600; color: var(--akcent); }
+  #ekran  { color: var(--akcent2); }
+  #stan   { color: var(--akcent3); }
+  #wyglad { color: var(--przygas); }
+  #prywatnosc { color: var(--przygas); }
+  body.prywatne #prywatnosc { color: var(--akcent3); border-color: var(--akcent3); }
+  body.prywatne #narzedzia { box-shadow: inset 0 2px 0 var(--akcent3); }
+  #adres {
+    flex: 1; min-width: 120px; height: 26px; padding: 0 8px;
+    border: 1px solid var(--linia); border-radius: var(--zaokr);
+    background: var(--tlo); color: var(--tekst); font: 12px var(--pismo);
+  }
+  #adres:focus { outline: none; border-color: var(--akcent); }
+  .rozdzielacz { width: 1px; height: 20px; background: var(--linia); margin: 0 2px; }
+  #zamknij:hover { background: #7a2f2f; border-color: #a04040; color: #fff; }
+
+  /* rzad kart - widoczny w oknie WWW i wszedzie tam, gdzie kart jest wiecej niz jedna */
+  #karty {
+    height: 32px; display: none; align-items: flex-end; gap: 2px; padding: 0 6px;
+    background: var(--tlo); border-bottom: 1px solid var(--linia);
+    overflow-x: auto; overflow-y: hidden;
+  }
+  #karty::-webkit-scrollbar { height: 0; }
+  body.zkartami #karty { display: flex; }
+  .karta {
+    display: flex; align-items: center; gap: 6px; height: 26px; max-width: 220px; min-width: 90px;
+    padding: 0 6px 0 10px; border: 1px solid var(--linia); border-bottom: none;
+    border-radius: var(--kafel-zaokr) var(--kafel-zaokr) 0 0;
+    background: var(--panel); color: var(--przygas); cursor: pointer;
+  }
+  .karta:hover { filter: brightness(1.25); }
+  .karta.aktywna { background: var(--panel2); color: var(--tekst); border-color: var(--akcent); }
+  .karta .tytul { overflow: hidden; text-overflow: ellipsis; }
+  .karta .x {
+    flex: none; width: 16px; height: 16px; line-height: 14px; text-align: center;
+    border-radius: 3px; color: var(--przygas); font-size: 12px;
+  }
+  .karta .x:hover { background: #7a2f2f; color: #fff; }
+  #nowaKarta {
+    flex: none; height: 24px; min-width: 26px; padding: 0 8px; margin-left: 2px;
+    color: var(--akcent2);
+  }
+</style>
+</head>
+<body>
+  <div id="narzedzia">
+    <button id="aplikacja" title="Zmien strone w tym oknie">&mdash;</button>
+    <button id="ekran"     title="Przenies okno na inny monitor (Alt+1..9)">Ekran ?</button>
+    <div class="rozdzielacz"></div>
+    <button id="wstecz"  title="Wstecz">&#9664;</button>
+    <button id="naprzod" title="Naprzod">&#9654;</button>
+    <button id="odswiez" title="Odswiez (F5); z Shift - bez cache">&#10227;</button>
+    <button id="dom"     title="Adres startowy tej strony">&#8962;</button>
+    <button id="startowa" title="Strona startowa z kafelkami (Ctrl+Home)">&#9638;</button>
+    <input id="adres" spellcheck="false" placeholder="adres lub haslo do wyszukania - Enter zatwierdza, Esc przywraca">
+    <div class="rozdzielacz"></div>
+    <button id="nowe"    title="Nowe okno: strona + ekran (Ctrl+N)">+ Okno</button>
+    <button id="stan"    title="Uklady pracy: otworz (Ctrl+O), zapisz (Ctrl+S), zapisz jako (Ctrl+Shift+S)">Stan: &mdash;</button>
+    <button id="wyglad"  title="Wyglad: Klasyczny / Kafelki / Matrix">Wyglad</button>
+    <button id="zewnetrznie" title="Otworz ten adres w przegladarce systemowej (Ctrl+Shift+O)">↗</button>
+    <button id="prywatnosc" title="Prywatnosc: tryb okna, blokada sledzenia, czyszczenie danych">⛊</button>
+    <button id="ustawienia" title="Ustawienia - strony i skroty (Ctrl+,)">⚙</button>
+    <button id="narzedziaDev" title="Konsola (F12)">F12</button>
+    <button id="zamknij"   title="Zamknij to okno">&#10005;</button>
+  </div>
+
+  <div id="karty"></div>
+
+<script>
+  const adres = document.getElementById('adres');
+  const wstecz = document.getElementById('wstecz');
+  const naprzod = document.getElementById('naprzod');
+  const listaKart = document.getElementById('karty');
+  let ostatniAdres = '';
+
+  const klik = (id, akcja) => document.getElementById(id)
+    .addEventListener('click', (e) => geo.akcja(akcja === 'odswiez' && e.shiftKey ? 'twardo' : akcja));
+
+  klik('aplikacja',   'menu-aplikacje');
+  klik('ekran',       'menu-ekrany');
+  klik('wstecz',      'wstecz');
+  klik('naprzod',     'naprzod');
+  klik('odswiez',     'odswiez');
+  klik('dom',         'dom');
+  klik('startowa',    'start');
+  klik('nowe',        'menu-nowe');
+  klik('stan',        'menu-stany');
+  klik('wyglad',      'menu-motyw');
+  klik('zewnetrznie', 'zewnetrznie');
+  klik('prywatnosc',  'menu-prywatnosc');
+  klik('ustawienia',  'ustawienia');
+  klik('narzedziaDev','narzedzia');
+  klik('zamknij',     'zamknij');
+
+  // Enter zatwierdza, Esc przywraca poprzedni adres i oddaje fokus stronie.
+  adres.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { geo.akcja('idz', adres.value); adres.blur(); }
+    else if (e.key === 'Escape') { adres.value = ostatniAdres; adres.blur(); }
+  });
+
+  // Srodkowy przycisk myszy zamyka karte - jak w kazdej przegladarce.
+  listaKart.addEventListener('auxclick', (e) => {
+    const karta = e.target.closest('.karta');
+    if (karta && e.button === 1) geo.akcja('karta-zamknij', Number(karta.dataset.id));
+  });
+
+  function rysujKarty(karty) {
+    listaKart.textContent = '';
+
+    for (const k of karty) {
+      const el = document.createElement('div');
+      el.className = 'karta' + (k.aktywna ? ' aktywna' : '');
+      el.dataset.id = k.id;
+      el.title = k.tytul;
+
+      const tytul = document.createElement('span');
+      tytul.className = 'tytul';
+      tytul.textContent = k.tytul;
+      el.appendChild(tytul);
+
+      const x = document.createElement('span');
+      x.className = 'x';
+      x.textContent = '✕';
+      x.title = 'Zamknij karte (Ctrl+W)';
+      x.addEventListener('click', (e) => { e.stopPropagation(); geo.akcja('karta-zamknij', k.id); });
+      el.appendChild(x);
+
+      el.addEventListener('click', () => geo.akcja('karta-wybierz', k.id));
+      listaKart.appendChild(el);
+    }
+
+    const plus = document.createElement('button');
+    plus.id = 'nowaKarta';
+    plus.textContent = '+';
+    plus.title = 'Nowa karta (Ctrl+T)';
+    plus.addEventListener('click', () => geo.akcja('karta-nowa'));
+    listaKart.appendChild(plus);
+  }
+
+  const NAZWY_MOTYWOW = { klasyczny: 'Klasyczny', kafelki: 'Kafelki', matrix: 'Matrix' };
+
+  geo.naStan((stan) => {
+    document.body.className = 'motyw-' + (stan.motyw || 'klasyczny')
+      + (stan.zKartami ? ' zkartami' : '') + (stan.prywatne ? ' prywatne' : '');
+
+    document.getElementById('aplikacja').textContent =
+      stan.aplikacja + (stan.prywatne ? '  ⛊' : '') + ' ▾';
+    document.title = (stan.profil ? stan.profil + ' | ' : '') + stan.aplikacja;
+    document.getElementById('ekran').textContent =
+      'Ekran ' + stan.ekran + ' z ' + stan.ekranow + ' - ' + (stan.rolaEkranu || '?') + ' ▾';
+    document.getElementById('stan').textContent = 'Uklad: ' + stan.stanAktywny + ' ▾';
+    document.getElementById('wyglad').textContent = (NAZWY_MOTYWOW[stan.motyw] || 'Klasyczny') + ' ▾';
+
+    // Stanowisko u klienta zewnetrznego nie ma ogladac adresow serwerow - wariant
+    // moze schowac pole adresu razem z tym, co adres ujawnia: otwarciem w przegladarce
+    // systemowej i konsola. Nawigacja (wstecz, odswiez, dom, karty) zostaje.
+    if (stan.bezAdresu) {
+      for (const id of ['adres', 'zewnetrznie', 'narzedziaDev', 'ustawienia']) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      }
+    }
+
+    ostatniAdres = stan.start ? '' : (stan.url || '');
+    if (document.activeElement !== adres) adres.value = ostatniAdres;
+    wstecz.disabled = !stan.wstecz;
+    naprzod.disabled = !stan.naprzod;
+
+    if (stan.zKartami) rysujKarty(stan.karty || []);
+  });
+</script>
+</body>
+</html>
