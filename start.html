@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data:">
+<title>Start</title>
+<link rel="stylesheet" href="motywy.css">
+<style>
+  :root { color-scheme: dark; --jednostka: 148px; --odstep: 8px; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px; min-height: 100vh;
+    background: var(--tlo); color: var(--tekst); font: 14px var(--pismo);
+  }
+  h1 { margin: 0 0 4px; font-size: 26px; font-weight: 600; letter-spacing: .5px; }
+  h2 { margin: 32px 0 12px; font-size: 14px; font-weight: 600; color: var(--przygas);
+       text-transform: uppercase; letter-spacing: 1.5px; }
+  .podtytul { margin: 0; color: var(--przygas); }
+  /* Autor programu. Zostaje widoczny w kazdej edycji - takze publicznej. */
+  .stopka { margin: 34px 0 0; color: var(--przygas); font-size: 12px; opacity: .75; }
+
+  .siatka { display: grid; grid-template-columns: repeat(auto-fill, var(--jednostka));
+            grid-auto-rows: var(--jednostka); gap: var(--odstep); justify-content: start; }
+
+  .kafel {
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 14px; border: 1px solid var(--linia); border-radius: var(--kafel-zaokr);
+    background: var(--panel2); color: var(--tekst); cursor: pointer; text-align: left;
+    font: 14px var(--pismo); overflow: hidden;
+  }
+  .kafel:hover { filter: brightness(1.3); border-color: var(--akcent); }
+  .kafel .znak { font-size: 30px; line-height: 1; color: var(--akcent); }
+  .kafel .nazwa { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+  .kafel .opis { font-size: 11px; color: var(--przygas); overflow: hidden; text-overflow: ellipsis; }
+  .kafel.duzy { grid-column: span 2; grid-row: span 2; }
+  .kafel.biezaca { border-color: var(--akcent); background: var(--panel); }
+
+  .pusto { color: var(--przygas); font-size: 13px; }
+</style>
+</head>
+<body>
+  <h1 id="naglowek">Nebu</h1>
+  <p class="podtytul">Wybierz strone albo zapisany uklad pracy</p>
+
+  <h2>Strony</h2>
+  <div class="siatka" id="aplikacje"></div>
+
+  <h2>Uklady pracy</h2>
+  <div class="siatka" id="stany"></div>
+
+  <p class="stopka">Nebu &mdash; GEO-SYS &#321;ukasz Czeczotka</p>
+
+<script>
+  // Znak kafelka wyliczany z nazwy - kazda strona dostaje wlasny, stale ten sam.
+  const ZNAKI = ['■', '◆', '▲', '⬡', '▦', '☷', '⊕', '◑', '❖', '◰'];
+  const znakDla = (nazwa) => ZNAKI[[...nazwa].reduce((s, z) => s + z.charCodeAt(0), 0) % ZNAKI.length];
+
+  function kafel({ znak, nazwa, opis, duzy, biezaca, klik }) {
+    const el = document.createElement('button');
+    el.className = 'kafel' + (duzy ? ' duzy' : '') + (biezaca ? ' biezaca' : '');
+    el.title = opis || nazwa;
+
+    const z = document.createElement('div'); z.className = 'znak'; z.textContent = znak;
+    const n = document.createElement('div'); n.className = 'nazwa'; n.textContent = nazwa;
+    const o = document.createElement('div'); o.className = 'opis'; o.textContent = opis || '';
+
+    const dol = document.createElement('div');
+    dol.appendChild(n); dol.appendChild(o);
+    el.appendChild(z); el.appendChild(dol);
+    el.addEventListener('click', klik);
+    return el;
+  }
+
+  geo.naKafelki((dane) => {
+    document.body.className = 'motyw-' + (dane.motyw || 'klasyczny');
+    document.getElementById('naglowek').textContent =
+      dane.motyw === 'matrix' ? 'NEBU // START' : 'Nebu';
+
+    const apl = document.getElementById('aplikacje');
+    apl.textContent = '';
+    for (const a of dane.aplikacje) {
+      apl.appendChild(kafel({
+        znak: znakDla(a.nazwa),
+        nazwa: a.nazwa,
+        opis: (a.skrot ? a.skrot + '  ' : '') + a.url.replace(/^https?:\/\//, ''),
+        duzy: a.nazwa === dane.biezaca,
+        biezaca: a.nazwa === dane.biezaca,
+        klik: () => geo.akcja('idz-kafel', a.nazwa),
+      }));
+    }
+
+    apl.appendChild(kafel({
+      znak: '＋',
+      nazwa: 'Dodaj strone',
+      opis: 'Ustawienia (Ctrl+,)',
+      klik: () => geo.otworzUstawienia(),
+    }));
+
+    const st = document.getElementById('stany');
+    st.textContent = '';
+    if (!dane.stany.length) {
+      const p = document.createElement('div');
+      p.className = 'pusto';
+      p.textContent = 'Brak zapisanych ukladow. Ustaw okna po swojemu i nacisnij Ctrl+Shift+S.';
+      st.appendChild(p);
+    }
+    for (const s of dane.stany) {
+      st.appendChild(kafel({
+        znak: '◱',
+        nazwa: s.nazwa,
+        opis: s.okien + (s.okien === 1 ? ' okno' : ' okien'),
+        klik: () => geo.otworzStan(s.sciezka),
+      }));
+    }
+  });
+
+  geo.dajKafelki();
+</script>
+</body>
+</html>

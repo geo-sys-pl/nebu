@@ -1,0 +1,12 @@
+node_modules/
+dist/
+dist-*/
+dane/
+dane-wspolne/
+wariant.json
+wariant.*.json
+listy/
+uklady-lukasz/
+*.exe
+*.log
+wrzuc-na-github.ps1

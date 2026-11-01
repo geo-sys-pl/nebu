@@ -1,0 +1,91 @@
+{
+  "name": "nebu",
+  "productName": "Nebu",
+  "version": "1.0.0",
+  "description": "Przegladarka wielomonitorowa z zapisem sesji pracy - okna na wielu ekranach, karty i uklady zapisywane do pliku",
+  "author": {
+    "name": "GEO-SYS Lukasz Czeczotka"
+  },
+  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win appx",
+    "dist-exe": "electron-builder --win nsis",
+    "dist-linux": "electron-builder --linux AppImage deb",
+    "buduj-firma": "node narzedzia/buduj.js firma",
+    "buduj-publiczna": "node narzedzia/buduj.js publiczna",
+    "buduj-sklep": "node narzedzia/buduj.js sklep",
+    "buduj-czarnocin": "node narzedzia/buduj.js czarnocin",
+    "buduj-bejsce": "node narzedzia/buduj.js bejsce"
+  },
+  "devDependencies": {
+    "electron": "44.10.0",
+    "electron-builder": "latest"
+  },
+  "build": {
+    "appId": "pl.geosys.nebu",
+    "productName": "Nebu",
+    "copyright": "Copyright (c) 2026 GEO-SYS Lukasz Czeczotka",
+    "files": [
+      "main.js",
+      "preload.js",
+      "pasek.html",
+      "start.html",
+      "ustawienia.html",
+      "logowanie.html",
+      "motywy.css",
+      "ikony/**",
+      "wariant.json",
+      "narzedzia/obrysy-3d.js",
+      "narzedzia/filtr-obrebow.js",
+      "listy/**",
+      "narzedzia/most-2d.js",
+      "narzedzia/most-3d.js",
+      "narzedzia/odswiez-2d.js",
+      "integracje.html",
+      "narzedzia/integracje.js"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "ikony"
+    },
+    "win": {
+      "target": [
+        "appx",
+        "nsis",
+        "portable"
+      ],
+      "icon": "ikony/icon.ico"
+    },
+    "appx": {
+      "applicationId": "Nebu",
+      "identityName": "ZMIEN-identityName-z-Partner-Center",
+      "publisher": "CN=ZMIEN-publisher-z-Partner-Center",
+      "publisherDisplayName": "GEO-SYS Lukasz Czeczotka",
+      "displayName": "Nebu",
+      "backgroundColor": "#021008",
+      "languages": [
+        "pl-PL",
+        "en-US"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Network",
+      "icon": "ikony"
+    },
+    "portable": {
+      "artifactName": "${productName} ${version} przenosny.exe",
+      "unpackDirName": false
+    }
+  }
+}
