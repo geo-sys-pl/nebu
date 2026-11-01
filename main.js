@@ -1225,7 +1225,7 @@ function pokazUstawienia(w) {
   oknoUstawien = new BrowserWindow({
     parent: w ? w.okno : undefined,
     width: 720,
-    height: 620,
+    height: 760,
     title: NAZWA + ' - ustawienia',
     backgroundColor: '#1b1e22',
     autoHideMenuBar: true,
@@ -2095,6 +2095,7 @@ app.userAgentFallback =
 
 app.whenReady().then(async () => {
   Menu.setApplicationMenu(null); // pasek z pasek.html zastepuje menu systemowe
+  log(NAZWA, app.getVersion(), '|', FIRMA);
   log('user-agent:', app.userAgentFallback);
 
   sesja = session.fromPartition(PARTYCJA_BAZA + (PROFIL ? '-' + PROFIL : ''));
